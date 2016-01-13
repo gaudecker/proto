@@ -31,6 +31,21 @@
 
 (require 'seq)
 
+(defun classify-nodejs (project)
+  (when (proto-project-root-contains-p project "package.json")
+    "node"))
+
+(defun classify-gulp (project)
+  (when (proto-project-root-contains-p project "gulpfile.js")
+    "gulp"))
+
+(defun classify-git (project)
+  (when (proto-project-root-contains-p project "\\.git")
+    "git"))
+
+(defvar proto--type-classifiers
+  '(classify-nodejs classify-gulp classify-git))
+
 (defun proto--prefix-path (prefix paths)
   "Return a list of pairs of PREFIX and path."
   (seq-map (lambda (path)
@@ -46,6 +61,12 @@ the rules in IGNORED."
              (seq-some (lambda (rule)
                          (string-match-p rule project))
                        rules)))))
+
+(defun proto--should-ignore-file (file &optional ignored)
+  (when (listp ignored)
+    (seq-some (lambda (rule)
+                (string-match-p rule file))
+              ignored)))
 
 (defun proto-list-projects (dirs &optional ignored)
   "Return a list of projects in DIRS.
@@ -63,7 +84,39 @@ If IGNORED is a list, projects that match the rules are ignored."
                 (proto--should-ignore-project project ignored))
               (directory-files dir t)))
 
-(proto-list-projects '("~/Projects"));"\\.\\{1,2\\}.*$"))
+(defun proto-project-root-contains-p (project path)
+  "Return t if PROJECT directory contains PATH, nil otherwise."
+  (seq-contains (directory-files project nil) path))
+
+(defun proto-project-list-files (project &optional ignored no-prefix)
+  "Return a list of files in PROJECT.
+
+Filter out files that match rules in IGNORED."
+  (let ((files (directory-files project nil)))
+    (seq-map (lambda (file)
+               (if (file-directory-p (concat project "/" file))
+                   (proto-project-list-files (concat project "/" file) ignored no-prefix)
+                 (substring (concat project "/" file)
+                            (if no-prefix (+ (length project) 1) 0))))
+             (seq-filter (lambda (file)
+                           (not (proto--should-ignore-file file ignored)))
+                         files))))
+
+
+
+(defun proto-project-classify (project classifiers)
+  "Returns a list of project classification tags."
+  (seq-filter #'stringp (seq-map (lambda (fn)
+                                   (funcall fn project))
+                                 classifiers)))
+
+(proto-list-projects '("~/Projects") '("\\.\\{1,2\\}.*$"))
+(proto-project-root-contains-p "~/Projects/etime-next" ".git")
+(proto-project-classify "~/Projects/etime-next" proto--type-classifiers)
+(proto-project-list-files "~/Projects/etime-next"
+                          '("\\.\\{1,2\\}$" "node_modules" "bower_components" ".git" ".DS_Store" "client")
+                          t)
+
 (proto--prefix-path "work" (proto-list-projects-in-dir "~/Projects" '("-")))
 
 ;;; proto.el ends here
