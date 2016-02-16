@@ -18,4 +18,44 @@ save Proto-specific project files on the filesystem.
 
 ## Usage
 
-*TODO*
+### `(proto-list-projects WORKSPACES &optional IGNORED)`
+
+Returns a list of paths to projects from all specified workspaces.
+
+```elisp
+(let ((workspaces '("/home/richard/projects"))
+      (ignored '("\\."))) ;; Ignore hidden directories
+  (proto-list-projects workspaces))
+```
+
+### `(proto-project-root-contains-p PROJECT PATH)`
+
+Returns `t` if file with `path` is found within the `project`.
+
+```elisp
+(let ((project "/home/richard/projects/emacs")
+      (path "README"))
+  (proto-project-root-contains-p project path))
+```
+
+### `(proto-project-list-files PROJECT &optional IGNORED NO-PREFIX)`
+
+Returns a list of files within the `project`.  Leaves out any files that match
+the rules in `ignored`.  If `no-prefix` is non-nil, each file is returned
+without its path.
+
+```elisp
+(let ((project "/home/richard/projects/emacs")
+      (ignored '("^\\."))) ;; Ignore hidden files
+  (proto-project-list-files project ignored))
+```
+
+### `(proto-project-classify PROJECT &optional CLASSIFIERS)`
+
+Returns a list of tags to identify project.  If `classifiers` is nil, use
+`proto-project-classifiers` instead.
+
+```elisp
+(let ((project "/home/richard/projects/emacs"))
+  (proto-project-classify project)) ;; (git autotools ...)
+```
