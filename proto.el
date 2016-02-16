@@ -33,18 +33,27 @@
 
 (defun classify-nodejs (project)
   (when (proto-project-root-contains-p project "package.json")
-    "node"))
+    '(node)))
 
 (defun classify-gulp (project)
   (when (proto-project-root-contains-p project "gulpfile.js")
-    "gulp"))
+    '(gulp)))
 
 (defun classify-git (project)
-  (when (proto-project-root-contains-p project "\\.git")
-    "git"))
+  (when (proto-project-root-contains-p project ".git")
+    '(git)))
+
+(defun classify-rust (project)
+  (when (proto-project-root-contains-p project "Cargo.toml")
+    '(cargo rust)))
 
 (defvar proto--type-classifiers
-  '(classify-nodejs classify-gulp classify-git))
+  '(classify-nodejs classify-gulp classify-git classify-rust))
+(defvar proto-type-classifiers proto--type-classifiers
+  "List of classifier functions.
+
+Each function maps the single argument PROJECT into a list of
+symbols that represent tags.")
 
 (defun proto--prefix-path (prefix paths)
   "Return a list of pairs of PREFIX and path."
@@ -104,19 +113,10 @@ Filter out files that match rules in IGNORED."
 
 
 
-(defun proto-project-classify (project classifiers)
-  "Returns a list of project classification tags."
-  (seq-filter #'stringp (seq-map (lambda (fn)
-                                   (funcall fn project))
-                                 classifiers)))
-
-(proto-list-projects '("~/Projects") '("\\.\\{1,2\\}.*$"))
-(proto-project-root-contains-p "~/Projects/etime-next" ".git")
-(proto-project-classify "~/Projects/etime-next" proto--type-classifiers)
-(proto-project-list-files "~/Projects/etime-next"
-                          '("\\.\\{1,2\\}$" "node_modules" "bower_components" ".git" ".DS_Store" "client")
-                          t)
-
-(proto--prefix-path "work" (proto-list-projects-in-dir "~/Projects" '("-")))
+(defun proto-project-classify (project &optional classifiers)
+  "Return a list of project classification tags."
+  (seq-mapcat (lambda (fn) (funcall fn project))
+              (or classifiers
+                  proto--type-classifiers)))
 
 ;;; proto.el ends here
