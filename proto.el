@@ -7,7 +7,7 @@
 ;; Created: 27 Apr 2015
 ;; Keywords: project workspace
 ;; Version: 0.1.0
-;; Package-Requires: ((seq "1.4"))
+;; Package-Requires: ((seq "1.11"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
