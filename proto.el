@@ -1,7 +1,8 @@
-;;; proto.el --- Project Tools
 ;; -*- lexical-binding t; -*-
 
-;; Copyright (C) 2015 Free Software Foundation
+;;; proto.el --- Project Tools
+
+;; Copyright (C) 2015, 2016 Free Software Foundation
 
 ;; Author: Eeli Reilin <eeli@fea.st>
 ;; Created: 27 Apr 2015
