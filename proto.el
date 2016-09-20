@@ -73,6 +73,7 @@ the rules in IGNORED."
                        rules)))))
 
 (defun proto--should-ignore-file (file &optional ignored)
+  "Return non-nil if FILE matches any of the rules in IGNORED."
   (when (listp ignored)
     (seq-some (lambda (rule)
                 (string-match-p rule file))
@@ -105,19 +106,32 @@ Filter out files that match rules in IGNORED."
   (let ((files (directory-files project nil)))
     (seq-map (lambda (file)
                (if (file-directory-p (concat project "/" file))
-                   (proto-project-list-files (concat project "/" file) ignored no-prefix)
+                   (proto-project-list-files (concat project "/" file)
+                                             ignored
+                                             no-prefix)
                  (substring (concat project "/" file)
                             (if no-prefix (+ (length project) 1) 0))))
              (seq-filter (lambda (file)
                            (not (proto--should-ignore-file file ignored)))
                          files))))
 
-
-
 (defun proto-project-classify (project &optional classifiers)
-  "Return a list of project classification tags."
+  "Return a list of PROJECT classification tags.
+
+If CLASSIFIERS is a list, use the functions to classify the
+projects, otherwise fall back to `proto-type-classifiers'."
   (seq-mapcat (lambda (fn) (funcall fn project))
-              (or classifiers
-                  proto--type-classifiers)))
+              (if (listp classifiers)
+                  classifiers
+                proto-type-classifiers)))
+
+(defmacro with-project (project &rest body)
+  "Evaluate BODY inside the context of PROJECT."
+  (declare (indent defun))
+  (let ((dir default-directory))
+    `(progn
+       (cd ,project)
+       ,@body
+       (cd ,dir))))
 
 ;;; proto.el ends here
