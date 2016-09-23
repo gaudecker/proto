@@ -1,11 +1,8 @@
-;; -*- lexical-binding t; -*-
+;;; proto.el --- Project Tools  -*- lexical-binding t -*-
 
-;;; proto.el --- Project Tools
-
-;; Copyright (C) 2015, 2016 Free Software Foundation
+;; Copyright (C) 2015-2016 Free Software Foundation, Inc.
 
 ;; Author: Eeli Reilin <eeli@fea.st>
-;; Created: 27 Apr 2015
 ;; Keywords: project workspace
 ;; Version: 0.1.0
 ;; Package-Requires: ((seq "1.11"))
