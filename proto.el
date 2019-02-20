@@ -49,7 +49,6 @@
   '(classify-nodejs classify-gulp classify-git classify-rust))
 (defvar proto-type-classifiers proto--type-classifiers
   "List of classifier functions.
-
 Each function maps the single argument PROJECT into a list of
 symbols that represent tags.")
 
@@ -71,13 +70,13 @@ the rules in IGNORED."
 
 (defun proto--should-ignore-file (file &optional ignored)
   (when (listp ignored)
-    (seq-some (lambda (rule)
-                (string-match-p rule file))
-              ignored)))
+    (let ((rules (append '("\\.\\{1,2\\}$") ignored)))
+      (seq-some (lambda (rule)
+                  (string-match-p rule file))
+                rules))))
 
 (defun proto-list-projects (dirs &optional ignored)
   "Return a list of projects in DIRS.
-
 If IGNORED is a list, projects that match the rules are ignored."
   (if (and (listp dirs) (car dirs))
       (append (proto-list-projects-in-dir (car dirs) ignored)
@@ -85,7 +84,6 @@ If IGNORED is a list, projects that match the rules are ignored."
 
 (defun proto-list-projects-in-dir(dir &optional ignored)
   "Return a list of projects in DIR.
-
 If IGNORED is a list, projects that match the rules are ignored."
   (seq-remove (lambda (project)
                 (proto--should-ignore-project project ignored))
@@ -97,7 +95,6 @@ If IGNORED is a list, projects that match the rules are ignored."
 
 (defun proto-project-list-files (project &optional ignored no-prefix)
   "Return a list of files in PROJECT.
-
 Filter out files that match rules in IGNORED."
   (let ((files (directory-files project nil)))
     (seq-map (lambda (file)

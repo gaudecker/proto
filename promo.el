@@ -43,7 +43,6 @@
 
 (defcustom promo-ignored-projects '()
   "List of projects to ignore.
-
 Project names can be written as whole or as regular expressions
 to match multiple projects."
   :type '(repeat string)
@@ -51,7 +50,6 @@ to match multiple projects."
 
 (defcustom promo-ignored-files '()
   "List of files to ignore.
-
 Filenames can be written as whole or as regular expressions
 to match multiple files."
   :type '(repeat string)
@@ -59,7 +57,6 @@ to match multiple files."
 
 (defcustom promo-workspaces '()
   "List of paths to workspaces.
-
 A workspace is a directory which can contain multiple projects as
 subdirectories.  If workspaces contain duplicate projects, then
 the functionality of promo becomes undefined."
@@ -73,7 +70,6 @@ the functionality of promo becomes undefined."
 
 (defcustom promo-show-on-mode-line t
   "Show currently open project on the mode line.
-
 The project name is appended to the global-mode-string, and
 should be the rightmost visible string on the mode line.
 Project is represented according to promo-mode-line-format."
@@ -82,7 +78,6 @@ Project is represented according to promo-mode-line-format."
 
 (defcustom promo-mode-line-format " [%s]"
   "Template for displaying open project on mode line.
-
 A string is printed verbatim in the mode line except for %-constructs:
   %s -- print project name.")
 
@@ -93,7 +88,6 @@ A string is printed verbatim in the mode line except for %-constructs:
 
 (defcustom promo-open-project-after-find-file nil
   "Open project if a found file belongs to it.
-
 This can be a little distracting if you're working on multiple
 projects at once.  Use with caution."
   :type 'boolean
@@ -130,26 +124,46 @@ projects at once.  Use with caution."
                                 promo-ignored-projects)))
 
 ;; TODO: Check if there's a better function to get list of keys in alist
-(defun promo-ido-completing-read (prompt collection)
+(defun promo-ido-completing-read (prompt choices)
   "Completing-read command that invokes `ido-completing-read'.
-
 This function is wrapped so we can use it with alists."
-  (let ((keys (seq-map (lambda (pair) (symbol-name (car pair)))
-                        collection)))
+  (let ((keys (seq-map (lambda (pair)
+                         (if (listp pair)
+                             (symbol-name (car pair))
+                           pair))
+                        choices)))
     (ido-completing-read prompt keys)))
+
+(defun promo-nested-completing-read (prompt choices)
+  "Completing-read command that invokes itself.
+If CHOICES is an alist and a value of list is selected, call
+itself on the sub-list."
+  (let ((choice (funcall promo-completion-function prompt choices)))
+    (if (consp (car choices))
+        (let ((pair (assoc (intern choice)
+                           choices)))
+          (if (and (listp (cdr pair)) (cdr pair))
+              (promo-nested-completing-read prompt (cdr pair))
+            (cdr pair)))
+      choice)))
 
 (defun promo-open-project ()
   (interactive)
   (let* ((projects (promo-list-projects))
          (project (cdr (assoc (intern (funcall promo-completion-function "Open project: " projects))
-                                           projects))))
+                              projects))))
     (cd project)
     (message "Project opened:" project)))
+
+(defun promo-find-file ()
+  (interactive)
+  (let ((file (promo-nested-completing-read "Find file: "
+                                            (proto-project-list-files promo-project promo-ignored-files))))
+    file))
 
 ;;;###autoload
 (define-minor-mode promo
   "Toggle project mode.
-
 Interactively with no argument, this command toggles the mode.
 A positive prefix argument enables the mode, any other prefix
 argument disables it.  From Lisp, argument omitted or nil enables
